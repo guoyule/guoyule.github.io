@@ -6,15 +6,21 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019/10 | Hexo</title>
+  <title>网站开发第三次讲义 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://yoursite.com/archives/2019/10/index.html">
+  <meta name="description" content="动态网站开发第三次课讲义 一、学习目标 1、掌握http协议之响应部分 2、熟练掌握Response的相关 API （重定向，路径，输出流） 3、掌握ServletContext的常用API 4、完成文件下载案例 二、具体讲解    2.1、掌握http协议之响应部分  请求消息：客户端发送给服务器端的数据  ​       数据格式： ​            1. 请求行 ​">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网站开发第三次讲义">
+<meta property="og:url" content="http://yoursite.com/2019/12/02/网站开发第三次讲义/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="动态网站开发第三次课讲义 一、学习目标 1、掌握http协议之响应部分 2、熟练掌握Response的相关 API （重定向，路径，输出流） 3、掌握ServletContext的常用API 4、完成文件下载案例 二、具体讲解    2.1、掌握http协议之响应部分  请求消息：客户端发送给服务器端的数据  ​       数据格式： ​            1. 请求行 ​">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml18716%5Cwps1.jpg">
+<meta property="og:updated_time" content="2019-12-02T11:34:32.834Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="网站开发第三次讲义">
+<meta name="twitter:description" content="动态网站开发第三次课讲义 一、学习目标 1、掌握http协议之响应部分 2、熟练掌握Response的相关 API （重定向，路径，输出流） 3、掌握ServletContext的常用API 4、完成文件下载案例 二、具体讲解    2.1、掌握http协议之响应部分  请求消息：客户端发送给服务器端的数据  ​       数据格式： ​            1. 请求行 ​">
+<meta name="twitter:image" content="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml18716%5Cwps1.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -150,201 +156,337 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="w-网站开发第三次讲义" class="article article-type-w " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      网站开发第三次讲义
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第三次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:34:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>动态网站开发第三次课讲义</strong></p>
+<p><strong>一、学习目标</strong></p>
+<p>1、掌握http协议之响应部分</p>
+<p>2、熟练掌握Response的相关 API （重定向，路径，输出流）</p>
+<p>3、掌握ServletContext的常用API</p>
+<p>4、完成文件下载案例</p>
+<p><strong>二、具体讲解</strong></p>
+<p>   <strong>2.1、掌握http协议之响应部分</strong></p>
+<ol>
+<li>请求消息：客户端发送给服务器端的数据</li>
+</ol>
+<p>​       数据格式：</p>
+<p>​            1. 请求行</p>
+<p>​            2. 请求头</p>
+<p>​            3. 请求空行</p>
+<p>​            4. 请求体</p>
+<p>​    2. 响应消息：服务器端发送给客户端的数据</p>
+<p>​        数据格式：</p>
+<p>​            <strong>1. 响应行</strong></p>
+<p>​                1. 组成：协议/版本 响应状态码 状态码描述</p>
+<p>​                2. 响应状态码：服务器告诉客户端浏览器本次请求和响应的一个状态。</p>
+<p>​                    1. 状态码都是3位数字 </p>
+<p>​                    2. 分类：</p>
+<p>\1. 1xx：服务器就收客户端消息，但没有接受完成，等待一段时       间后，发送1xx多状态码</p>
+<p>​                        2. 2xx：成功。代表：200</p>
+<p>​                        3. 3xx：重定向。代表：302(重定向)，304(访问缓存)</p>
+<p>​                        4. 4xx：客户端错误。</p>
+<p>​                            代表：</p>
+<p>​                                404（请求路径没有对应的资源） </p>
+<p>​                                405：请求方式没有对应的doXxx方法</p>
+<p>​                        5. 5xx：服务器端错误。代表：500(服务器内部出现异常)        </p>
+<p>​            <strong>2. 响应头：</strong></p>
+<p>​                1. 格式：头名称： 值</p>
+<p>​                2. 常见的响应头：</p>
+<p>​                 1. Content-Type：服务器告诉客户端本次响应体数据格式以及编码格式</p>
+<p>​                 2. Content-disposition：服务器告诉客户端以什么格式打开响应体数据</p>
+<p>​                 MIME类型</p>
+<p>​                    值：</p>
+<p>​                        in-line:默认值,在当前页面内打开</p>
+<p>​                        attachment;filename=xxx：以附件形式打开响应体。文件下载</p>
+<p>​            <strong>3. 响应空行</strong></p>
+<p>​            <strong>4. 响应体:传输的数据</strong></p>
+<p>​        响应字符串格式</p>
+<p>​            HTTP/1.1 200 OK</p>
+<p>​            Content-Type: text/html;charset=UTF-8</p>
+<p>​            Content-Length: 101</p>
+<p>​            Date: Wed, 06 Jun 2018 07:08:42 GMT</p>
+<p>​            <html></html></p>
+<p>​              <head></head></p>
+<p>​                <title>$Title$</title></p>
+<p>​              </p>
+<p>​              <body></body></p>
+<p>​              hello , response</p>
+<p>​              </p>
+<p>​            </p>
+<p><strong>2.2、熟练掌握Response的相关 API （重定向，路径，输出流）</strong></p>
+<p>​    <strong>Response对象</strong></p>
+<p>​       功能：设置响应消息</p>
+<p>​        1. 设置响应行</p>
+<p>​            1. 格式：HTTP/1.1 200 ok</p>
+<p>​            2. 设置状态码：setStatus(int sc) </p>
+<p>​        2. 设置响应头：setHeader(String name, String value)     </p>
+<p>​        3. 设置响应体：</p>
+<p>​            使用步骤：</p>
+<p>​                1. 获取输出流</p>
+<p>​                    字符输出流：PrintWriter getWriter()</p>
+<p>​                    字节输出流：ServletOutputStream getOutputStream()</p>
+<p>​                2. 使用输出流，将数据输出到客户端浏览器</p>
+<p>​    <strong>案例：</strong></p>
+<p>​        1. 完成重定向</p>
+<p>​            重定向：资源跳转的方式，重定向为向另外一个servlet</p>
+<p>​                    或另外一个jsp发送一个新的请求</p>
+<p>​            代码实现：</p>
+<p>​              1. 设置状态码为302</p>
+<p>​                response.setStatus(302);</p>
+<p>​              2.设置响应头location</p>
+<p>​                response.setHeader(“location”,”/day15/responseDemo2”);</p>
+<p>​                //简单的重定向方法</p>
+<p>​                response.sendRedirect(“/day15/responseDemo2”);</p>
+<p>​             重定向的特点:redirect</p>
+<p>​                1. 地址栏发生变化</p>
+<p>​                2. 重定向可以访问其他站点(服务器)的资源</p>
+<p>​                3. 重定向是两次请求。不能使用request对象来共享数据</p>
+<p>​             转发的特点：forward</p>
+<p>​                1. 转发地址栏路径不变</p>
+<p>​                2. 转发只能访问当前服务器下的资源</p>
+<p>​                3. 转发是一次请求，可以使用request对象来共享数据</p>
+<p>​             forward 和  redirect 区别</p>
+<p>​              路径写法：</p>
+<p>​                1. 路径分类</p>
+<p>​                    1. 相对路径：通过相对路径不可以确定唯一资源</p>
+<p>​                        如：./index.html</p>
+<p>​                          不以/开头，以.开头路径</p>
+<p>​                          规则：找到当前资源和目标资源之间的相对位置关系</p>
+<p>​                            ./：当前目录</p>
+<p>​                            ../:后退一级目录</p>
+<p>​                    2. 绝对路径：通过绝对路径可以确定唯一资源</p>
+<p>​    如：<a href="http://localhost/day15/responseDemo2" target="_blank" rel="noopener">http://localhost/day15/responseDemo2</a>             /day15/responseDemo2     以/开头的路径</p>
+<p><strong>规则：判断定义的路径是给谁用的？判断请求将来从哪儿发出</strong></p>
+<p>​                         给客户端浏览器使用：需要加虚拟目录(项目的访问路径)</p>
+<p>​                                建议虚拟目录动态获取：request.getContextPath()</p>
+<p>​                                <a> , <form> 重定向…</form></a></p>
+<p>​                         给服务器使用：不需要加虚拟目录</p>
+<p>​                                转发路径</p>
+<p>​        2. 服务器输出字符数据到浏览器</p>
+<p>​             步骤：</p>
+<p>​                1. 获取字符输出流</p>
+<p>​                2. 输出数据</p>
+<p>​             注意：</p>
+<p>​                乱码问题：</p>
+<p>​                  1. PrintWriter pw = response.getWriter();获取的流的默认编码是ISO-8859-1</p>
+<p>​              2. 设置该流的默认编码</p>
+<p>​              //简单的形式，设置编码，是在获取流之前设置</p>
+<p>​                 response.setContentType(“text/html;charset=utf-8”);</p>
+<p>​        3. 服务器输出字节数据到浏览器</p>
+<p>​            步骤：</p>
+<p>​                1. 获取字节输出流</p>
+<p>​                2. 输出数据</p>
+<p>​        4. 验证码</p>
+<p>​            1. 本质：图片</p>
+<p>​            2. 目的：防止恶意表单注册</p>
+<p>​           <img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml18716%5Cwps1.jpg" alt="img"></p>
+<p><strong>2.3、掌握ServletContext的常用API</strong></p>
+<p><strong>Servlet有四大域对象，pageContext request session application</strong></p>
+<p><strong>request       HttpServletRequest</strong></p>
+<p><strong>session       HttpSession</strong></p>
+<p><strong>application    ServletContext</strong></p>
+<p>\1. 概念：代表整个web应用，可以和程序的容器(服务器)来通信</p>
+<p>​    2. 获取：</p>
+<p>​        1. 通过request对象获取</p>
+<p>​            request.getServletContext();</p>
+<p>​        2. 通过HttpServlet获取</p>
+<p>​            this.getServletContext();</p>
+<p>​    3. 功能：</p>
+<p>​        1. 获取MIME类型：</p>
+<p>​            * MIME类型:在互联网通信过程中定义的一种文件数据类型</p>
+<p>​                * 格式： 大类型/小类型   text/html        image/jpeg</p>
+<p>​            * 获取：String getMimeType(String file)  </p>
+<p>​        2. 域对象：共享数据</p>
+<p>​            1. setAttribute(String name,Object value)</p>
+<p>​            2. getAttribute(String name)</p>
+<p>​            3. removeAttribute(String name)</p>
+<p>​            * ServletContext对象范围：所有用户所有请求的数据</p>
+<p>​        3. 获取文件的真实(服务器)路径</p>
+<p>​            1. 方法：String getRealPath(String path)  </p>
+<p>​              String b = context.getRealPath(“/b.txt”);//web目录下资源访问</p>
+<p>​              System.out.println(b);</p>
+<p>​              String c = context.getRealPath(“/WEB-INF/c.txt”);//WEB-INF目录下的资源访问</p>
+<p>​              System.out.println(c);</p>
+<p>​            String a = context.getRealPath(“/WEB-INF/classes/a.txt”);//src目录下的资源访问</p>
+<p>​              System.out.println(a);</p>
+<p><strong>2.4、完成文件下载案例</strong></p>
+<p>​      文件下载需求：</p>
+<p>​        1. 页面显示超链接</p>
+<p>​        2. 点击超链接后弹出下载提示框</p>
+<p>​        3. 完成图片文件下载</p>
+<p>​      分析：</p>
+<p>​        1. 超链接指向的资源如果能够被浏览器解析，则在浏览器中展示，如果不能解析，则弹出下载提示框。不满足需求</p>
+<p>​        2. 任何资源都必须弹出下载提示框</p>
+<p>​        3. 使用响应头设置资源的打开方式：</p>
+<p>​         content-disposition:attachment;filename=xxx</p>
+<p>​      步骤：</p>
+<p>​        1. 定义页面，编辑超链接href属性，指向Servlet，传递资源名称filename</p>
+<p>​        2. 定义Servlet</p>
+<p>​            1. 获取文件名称</p>
+<p>​            2. 使用字节输入流加载文件进内存</p>
+<p>​            3. 指定response的响应头： content-disposition:attachment;filename=xxx</p>
+<p>​            4. 将数据写出到response输出流</p>
+<p>​      问题：</p>
+<p>​          中文文件问题</p>
+<p>​             解决思路：</p>
+<p>​                1. 获取客户端使用的浏览器版本信息</p>
+<p>​                2. 根据不同的版本信息，设置filename的编码方式不同</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/22/MySQL第五课/" class="archive-article-date">
-  	<time datetime="2019-10-22T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-22</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/22/MySQL第五课/">MySQL第五课</a>
-    </h1>
-  
+      
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
+      
 
-          
-
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/12/02/网站开发第三次讲义/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/21/MySQL第一课/" class="archive-article-date">
-  	<time datetime="2019-10-21T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-21</time>
-</a>
+<nav id="article-nav">
+  
+    <a href="/2019/12/02/网站开发第四次讲义/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          网站开发第四次讲义
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/12/02/网站开发第二次讲义/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">网站开发第二次讲义</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/21/MySQL第一课/">MySQL第一课</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/21/mysql第二节/" class="archive-article-date">
-  	<time datetime="2019-10-21T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/21/mysql第二节/">MySQL第二课</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/21/MySQL第三节/" class="archive-article-date">
-  	<time datetime="2019-10-21T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/21/MySQL第三节/">MySQL第三课</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/16/hello-world/" class="archive-article-date">
-  	<time datetime="2019-10-16T10:05:51.828Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-16</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/16/hello-world/">Hello World</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
 
 
           </div>
@@ -367,8 +509,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

@@ -152,6 +152,1405 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-网站开发第六次讲义" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第六次讲义/">网站开发第六次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第六次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:37:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>动态网站开发第六次课讲义</strong></p>
+<p><strong>一、学习目标</strong></p>
+<p>1、数据库连接池</p>
+<p>2、JdbcTemplate</p>
+<p>3、分页显示数据</p>
+<p>4、Filter</p>
+<p>5、ajax与json</p>
+<p>6、文件上传</p>
+<p><strong>二、具体讲解</strong></p>
+<p><strong>2.1、数据库连接池</strong></p>
+<p><strong>2.1.1、简介</strong></p>
+<p>数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个；释放空闲时间超过最大空闲时间的数据库连接来避免因为没有释放数据库连接而引起的数据库连接遗漏。这项技术能明显提高对数据库操作的性能。</p>
+<p><strong>2.1.2、常用数据库连接池</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml18716%5Cwps2.jpg" alt="img"> </p>
+<p>我们采用Druid数据库连接池，其它连接池可以课下了解。以下进行Druid连接池的介绍</p>
+<p><strong>2.1.3、Druid数据库连接池简介</strong></p>
+<p>Druid是阿里众多优秀开源项目中的一个。它除了提供性能卓越的连接池功能外，还集成了SQL监控，黑名单拦截等功能，用它自己的话说，Druid是“为监控而生”。</p>
+<p><strong>2.1.4、Druid数据库连接池的优点</strong></p>
+<p>1、<strong>是目前java最优秀的数据库连接池，用户量较大，中文文档比较完备</strong></p>
+<p>2、强大的监控特性，通过Druid提供的监控功能，可以清楚知道连接池和SQL的工作</p>
+<p>情况。</p>
+<p>a. 监控SQL的执行时间、ResultSet持有时间、返回行数、更新行数、错误次数、错</p>
+<p>误堆栈信息；</p>
+<p>b. SQL执行的耗时区间分布。什么是耗时区间分布呢？比如说，某个SQL执行了1000次，其中0<del>1毫秒区间50次，1</del>10毫秒800次，10<del>100毫秒100次，100</del>1000毫秒30次，1~10秒15次，10秒以上5次。通过耗时区间分布，能够非常清楚知道SQL的执行耗时情况；</p>
+<p>c. 监控连接池的物理连接创建和销毁次数、逻辑连接的申请和关闭次数、非空等待次数、PSCache命中率等。</p>
+<p>3、方便扩展。Druid提供了Filter-Chain模式的扩展API，可以自己编写Filter拦截JDBC中</p>
+<p>的  任何方法，可以在上面做任何事情，比如说性能监控、SQL审计、用户名密码加密、日志等等。</p>
+<p>4、Druid集合了开源和商业数据库连接池的优秀特性，并结合阿里巴巴大规模苛刻生产环境的使用经验进行优化。</p>
+<p><strong>2.1.5、Druid数据库连接池的基本使用方法</strong></p>
+<p><strong>1、步骤：</strong></p>
+<p>​    1. 导入jar包 druid-1.0.9.jar</p>
+<p>​    2. 定义配置文件：</p>
+<p>​        是properties形式的</p>
+<p>​        可以叫任意名称，可以放在任意目录下</p>
+<p>​    3. 加载配置文件。Properties</p>
+<p>​    4. 获取数据库连接池对象：通过工厂来来获取  DruidDataSourceFactory</p>
+<p>​    5. 获取连接：getConnection</p>
+<p>​       代码：</p>
+<p>​         //3.加载配置文件</p>
+<p>​         Properties pro = new Properties();   </p>
+<p>InputStream is = DruidDemo.class.getClassLoader().getResourceAsStream(“druid.properties”);</p>
+<p>​         pro.load(is);</p>
+<p>​         //4.获取连接池对象</p>
+<p>​         DataSource ds = DruidDataSourceFactory.createDataSource(pro);</p>
+<p>​         //5.获取连接</p>
+<p>​         Connection conn = ds.getConnection();</p>
+<p><strong>2、定义工具类：</strong></p>
+<p>​     1. 定义一个类 JDBCUtils</p>
+<p>​     2. 提供静态代码块加载配置文件，初始化连接池对象</p>
+<p>​     3. 提供方法</p>
+<p>​        1. 获取连接方法：通过数据库连接池获取连接</p>
+<p>​        2. 释放资源</p>
+<p>​        3. 获取连接池的方法</p>
+<p><strong>2.2、JdbcTemplate</strong></p>
+<p><strong>2.2.1、概述</strong></p>
+<p>Spring框架对JDBC的简单封装。提供了一个JDBCTemplate对象简化JDBC的开发</p>
+<p><strong>2.2.2、JdbcTemplate基本使用</strong></p>
+<p>步骤：</p>
+<p>​    1. 导入jar包</p>
+<p>​    2. 创建JdbcTemplate对象。依赖于数据源DataSource</p>
+<p>​       JdbcTemplate template = new JdbcTemplate(ds);</p>
+<p>​    3. 调用JdbcTemplate的方法来完成CRUD的操作</p>
+<p>​       update():执行DML语句。增、删、改语句</p>
+<p>​       queryForMap():查询结果将结果集封装为map集合，将列名作为key，将值作为</p>
+<p>value 将这条记录封装为一个map集合。注意：这个方法查询的结果集长度</p>
+<p>只能是1</p>
+<p>​       queryForList():查询结果将结果集封装为list集合</p>
+<p>​            注意：将每一条记录封装为一个Map集合，再将Map集合装载到List集合中</p>
+<p>​        query():查询结果，将结果封装为JavaBean对象</p>
+<p>​            query的参数：RowMapper</p>
+<p>​                 1、一般我们使用BeanPropertyRowMapper实现类。可以完成数据</p>
+<p>到JavaBean的自动封装</p>
+<p>​                 2、new BeanPropertyRowMapper&lt;类型&gt;(类型.class)</p>
+<p>​        queryForObject：查询结果，将结果封装为对象</p>
+<p>​               一般用于聚合函数的查询</p>
+<p><strong>2.3、分页显示数据</strong></p>
+<p>大部分情况下，表中有大量数据，不太可能一次性的一张表的数据显示在一个网页上，一般进行分页显示，比如：大家经常访问的淘宝网就是一页一页的进行显示的</p>
+<p>1、创建分页bean类，Page</p>
+<p>2、把dao包中的查询语句加上limit</p>
+<p>3、在service层获得数据进行按页获取</p>
+<p>3、创建分页的jsp页面</p>
+<p><strong>2.4、Filter过滤器</strong></p>
+<p><strong>2.4.1、**</strong>概念：**</p>
+<p>​    生活中的过滤器：净水器,空气净化器，土匪、</p>
+<p>​    web中的过滤器：当访问服务器的资源时，过滤器可以将请求拦截下来，完成一些特</p>
+<p>殊的功能。</p>
+<p>​    过滤器的作用：</p>
+<p>​            一般用于完成通用的操作。如：登录验证、统一编码处理、敏感字符过滤…</p>
+<p><strong>2.4.**</strong>2<strong><strong>、</strong></strong>快速入门：**</p>
+<p>​    1. 步骤：</p>
+<p>​        1. 定义一个类，实现接口Filter</p>
+<p>​        2. 复写方法</p>
+<p>​        3. 配置拦截路径</p>
+<p>​            1. web.xml</p>
+<p>​            2. 注解</p>
+<p>​     2. 代码：</p>
+<p>​            @WebFilter(“/*”)//访问所有资源之前，都会执行该过滤器</p>
+<p>​            public class FilterDemo1 implements Filter {</p>
+<p>​                @Override</p>
+<p>​                public void init(FilterConfig filterConfig) throws ServletException {</p>
+<p>​                }</p>
+<p>​                @Override</p>
+<p>​                public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {</p>
+<p>​                    System.out.println(“filterDemo1被执行了….”);</p>
+<p>​            </p>
+<p>​                    //放行</p>
+<p>​                    filterChain.doFilter(servletRequest,servletResponse);</p>
+<p>​                }</p>
+<p>​                @Override</p>
+<p>​                public void destroy() {</p>
+<p>​                }</p>
+<p>​            }</p>
+<p>​    3. 过滤器细节：</p>
+<p>​        1. web.xml配置    </p>
+<p>​            <filter></filter></p>
+<p>​                <filter-name>demo1</filter-name></p>
+<p>​                <filter-class>cn.itcast.web.filter.FilterDemo1</filter-class></p>
+<p>​            </p>
+<p>​            <filter-mapping></filter-mapping></p>
+<p>​                <filter-name>demo1</filter-name></p>
+<p>​                <!-- 拦截路径 --></p>
+<p>​                <url-pattern>/*</url-pattern></p>
+<p>​            </p>
+<p>​        2. 过滤器执行流程</p>
+<p>​            1. 执行过滤器</p>
+<p>​            2. 执行放行后的资源</p>
+<p>​            3. 回来执行过滤器放行代码下边的代码</p>
+<p>​        3. 过滤器生命周期方法</p>
+<p>​            1. init:在服务器启动后，会创建Filter对象，然后调用init方法。只执行一次</p>
+<p>。用于加载资源</p>
+<p>​            2. doFilter:每一次请求被拦截资源时，会执行。执行多次</p>
+<p>​            3. destroy:在服务器关闭后，Filter对象被销毁。如果服务器是正常关闭，则</p>
+<p>会执行destroy方法。只执行一次。用于释放资源</p>
+<p>​        4. 过滤器配置详解</p>
+<p>​            拦截路径配置：</p>
+<ol>
+<li>具体资源路径： /index.jsp   只有访问index.jsp资源时，过滤器才</li>
+</ol>
+<p>会被执行</p>
+<p>​                2. 拦截目录： /user/*    访问/user下的所有资源时，过滤器都会被执行</p>
+<p>​                3. 后缀名拦截： *.jsp        访问所有后缀名为jsp资源时，过滤器都会</p>
+<p>被执行</p>
+<p>​                4. 拦截所有资源：/*        访问所有资源时，过滤器都会被执行</p>
+<p>​            拦截方式配置：资源被访问的方式</p>
+<p>​                注解配置：</p>
+<p>​                    设置dispatcherTypes属性</p>
+<p>​                        1. REQUEST：默认值。浏览器直接请求资源</p>
+<p>​                        2. FORWARD：转发访问资源</p>
+<p>​                        3. INCLUDE：包含访问资源</p>
+<p>​                        4. ERROR：错误跳转资源</p>
+<p>​                        5. ASYNC：异步访问资源</p>
+<p>​                web.xml配置</p>
+<p>​                     设置<dispatcher></dispatcher>标签即可        </p>
+<p>​        5. 过滤器链(配置多个过滤器)</p>
+<p>​            执行顺序：如果有两个过滤器：过滤器1和过滤器2</p>
+<p>​                1. 过滤器1</p>
+<p>​                2. 过滤器2</p>
+<p>​                3. 资源执行</p>
+<p>​                4. 过滤器2</p>
+<p>​                5. 过滤器1 </p>
+<p>过滤器先后顺序问题：</p>
+<p>​                1. 注解配置：按照类名的字符串比较规则比较，值小的先执行</p>
+<p>​                    如： AFilter 和 BFilter，AFilter就先执行了。</p>
+<p>​                2. web.xml配置： <filter-mapping>谁定义在上边，谁先执行</filter-mapping></p>
+<p>\4. 案例：</p>
+<p>​        1. 案例1_登录验证</p>
+<p>​            需求：</p>
+<p>​                1. 访问day17_case案例的资源。验证其是否登录</p>
+<p>​                2. 如果登录了，则直接放行。</p>
+<p>​                3. 如果没有登录，则跳转到登录页面，提示”您尚未登录，请先登录”。</p>
+<p>​        2. 案例2_敏感词汇过滤</p>
+<p>​            需求：</p>
+<p>​                1. 对day17_case案例录入的数据进行敏感词汇过滤</p>
+<p>​                2. 敏感词汇参考《敏感词汇.txt》</p>
+<p>​                3. 如果是敏感词汇，替换为 *** </p>
+<p>​            分析：</p>
+<p>​                1. 对request对象进行增强。增强获取参数相关方法</p>
+<p>​                2. 放行。传递代理对象</p>
+<p>​            增强对象的功能：</p>
+<p>​                设计模式：一些通用的解决固定问题的方式</p>
+<p>​                1. 装饰模式</p>
+<p>​                2. 代理模式</p>
+<p>​                    概念：</p>
+<p>​                        1. 真实对象：被代理的对象</p>
+<p>​                        2. 代理对象：</p>
+<p>​                        3. 代理模式：代理对象代理真实对象，达到增强真实对象功</p>
+<p>能的目的</p>
+<p>​                      实现方式：</p>
+<p>​                         1. 静态代理：有一个类文件描述代理模式</p>
+<p>​                         2. 动态代理：在内存中形成代理类</p>
+<p>​                            实现步骤：</p>
+<p>​                                1. 代理对象和真实对象实现相同的接口</p>
+<p>​                                2. 代理对象 = Proxy.newProxyInstance();</p>
+<p>​                                3. 使用代理对象调用方法。</p>
+<p>​                                4. 增强方法</p>
+<p>​                             增强方式：</p>
+<p>​                                1. 增强参数列表</p>
+<p>​                                2. 增强返回值类型</p>
+<p>​                                3. 增强方法体执行逻辑</p>
+<p><strong>2.5、ajax与json</strong>    </p>
+<p> <strong>2.5.1、ajax**</strong>概念：** </p>
+<p>ASynchronous JavaScript And XML    异步的JavaScript 和 XML</p>
+<p>要想理解ajax应该先了解异步与同步的概念</p>
+<p>​    1. 异步和同步：客户端和服务器端相互通信的基础上</p>
+<p>​            客户端必须等待服务器端的响应。在等待的期间客户端不能做其他操作。</p>
+<p>​            客户端不需要等待服务器端的响应。在服务器处理请求的过程中，客户端可</p>
+<p>以进行其他的操作。</p>
+<p>​    Ajax 是一种在无需重新加载整个网页的情况下，能够更新部分网页的技术。通过在后台与服务器进行少量数据交换，Ajax 可以使网页实现异步更新。这意味着可以在不重新加载整个网页的情况下，对网页的某部分进行更新。</p>
+<p>传统的网页（不使用 Ajax）如果需要更新内容，必须重载整个网页页面。提升用户的体验</p>
+<p><strong>2.5.2、**</strong>实现方式：**</p>
+<p>\1. 原生的JS实现方式（了解）</p>
+<p>​      1.创建核心对象</p>
+<p>​         var xmlhttp;</p>
+<p>​         if (window.XMLHttpRequest){</p>
+<p>// code for IE7+, Firefox, Chrome, Opera, Safari</p>
+<p>​                    xmlhttp=new XMLHttpRequest();</p>
+<p>​          }else{</p>
+<p>// code for IE6, IE5</p>
+<p>​                    xmlhttp=new ActiveXObject(“Microsoft.XMLHTTP”);</p>
+<p>​          }</p>
+<p>​       2. 建立连接</p>
+<p>​        /*</p>
+<p>​          参数：</p>
+<p>​             1. 请求方式：GET、POST</p>
+<p>​                 get方式，请求参数在URL后边拼接。send方法为空参</p>
+<p>​                 post方式，请求参数在send方法中定义</p>
+<p>​             2. 请求的URL：</p>
+<p>​             3. 同步或异步请求：true（异步）或 false（同步）</p>
+<p>​         */</p>
+<p>​          xmlhttp.open(“GET”,”ajaxServlet?username=tom”,true);</p>
+<p>​      3.发送请求</p>
+<p>​          xmlhttp.send();</p>
+<p>​      4.接受并处理来自服务器的响应结果</p>
+<p>​          获取方式 ：xmlhttp.responseText</p>
+<p>​          什么时候获取？当服务器响应成功后再获取</p>
+<p>​          当xmlhttp对象的就绪状态改变时，触发事件onreadystatechange。</p>
+<p>​           xmlhttp.onreadystatechange=function(){</p>
+<p>​               //判断readyState就绪状态是否为4，判断status响应状态码是否为200</p>
+<p>​               if (xmlhttp.readyState==4 &amp;&amp; xmlhttp.status==200){</p>
+<p>​                           //获取服务器的响应结果</p>
+<p>​                            var responseText = xmlhttp.responseText;</p>
+<p>​                            alert(responseText);</p>
+<p>​                }</p>
+<p>​           }</p>
+<p>2、jquery方式实现</p>
+<p>\1. $.ajax()</p>
+<p>​        语法：$.ajax({键值对});</p>
+<p>​        使用$.ajax()发送异步请求</p>
+<p>​        $.ajax({</p>
+<p>​           url:”ajaxServlet1111” , // 请求路径</p>
+<p>​           type:”POST” , //请求方式</p>
+<p>​           data: “username=jack&amp;age=23”,//请求参数</p>
+<p>​           data:{“username”:”jack”,”age”:23},</p>
+<p>​               success:function (data) {</p>
+<p>​                     alert(data);</p>
+<p>​                },//响应成功后的回调函数</p>
+<p>​                error:function () {</p>
+<p>​                      alert(“出错啦…”)</p>
+<p>​                },//表示如果请求响应出现错误，会执行的回调函数</p>
+<p>​                dataType:”text”//设置接受到的响应数据的格式</p>
+<p>​            });</p>
+<p>​      2. $.get()：发送get请求</p>
+<p>​         语法：$.get(url, [data], [callback], [type])</p>
+<p>​             参数：</p>
+<p>​                  url：请求路径</p>
+<p>​                  data：请求参数</p>
+<p>​                  callback：回调函数</p>
+<p>​                  type：响应结果的类型</p>
+<p>​      3. $.post()：发送post请求</p>
+<p>​         语法：$.post(url, [data], [callback], [type])</p>
+<p>​            参数：</p>
+<p>​                   url：请求路径</p>
+<p>​                   data：请求参数</p>
+<p>​                   callback：回调函数</p>
+<p>​                   type：响应结果的类型</p>
+<p><strong>2.5.3、json讲解</strong></p>
+<p>\1. 概念： JavaScript Object Notation        JavaScript对象表示法</p>
+<p>​        Person p = new Person();</p>
+<p>​        p.setName(“张三”);</p>
+<p>​        p.setAge(23);</p>
+<p>​        p.setGender(“男”);</p>
+<p>​        var p = {“name”:”张三”,”age”:23,”gender”:”男”};</p>
+<p>json现在多用于存储和交换文本信息的语法</p>
+<p>​        进行数据的传输</p>
+<p>​        JSON 比 XML 更小、更快，更易解析。</p>
+<p>\2. 语法：</p>
+<p>​    1. 基本规则</p>
+<p>​       数据在名称/值对中：json数据是由键值对构成的</p>
+<p>​          键用引号(单双都行)引起来，也可以不使用引号</p>
+<p>​          值得取值类型：</p>
+<p>​                    1. 数字（整数或浮点数）</p>
+<p>​                    2. 字符串（在双引号中）</p>
+<p>​                    3. 逻辑值（true 或 false）</p>
+<p>​                    4. 数组（在方括号中）    {“persons”:[{},{}]}</p>
+<p>​                    5. 对象（在花括号中） {“address”:{“province”：”陕西”….}}</p>
+<p>​                    6. null</p>
+<p>​            数据由逗号分隔：多个键值对由逗号分隔</p>
+<p>​            花括号保存对象：使用{}定义json 格式</p>
+<p>​            方括号保存数组：[]</p>
+<p>​     2. 获取数据:</p>
+<p>​            1. json对象.键名</p>
+<p>​            2. json对象[“键名”]</p>
+<p>​            3. 数组对象[索引]</p>
+<p>​            4. 遍历</p>
+<p>​            //1.定义基本格式</p>
+<p>​            var person = {“name”: “张三”, age: 23, ‘gender’: true};</p>
+<p>​            var ps = [{“name”: “张三”, “age”: 23, “gender”: true},</p>
+<p>​                   {“name”: “李四”, “age”: 24, “gender”: true},</p>
+<p>​                   {“name”: “王五”, “age”: 25, “gender”: false}];</p>
+<p>​             //获取person对象中所有的键和值</p>
+<p>​             //for in 循环</p>
+<p>​              for(var key in person){</p>
+<p>​                    这样的方式获取不行。因为相当于  person.”name”</p>
+<p>​                    alert(key + “:” + person.key);</p>
+<p>​                    alert(key+”:”+person[key]);</p>
+<p>​               }</p>
+<p>​             //获取ps中的所有值</p>
+<p>​              for (var i = 0; i &lt; ps.length; i++) {</p>
+<p>​                   var p = ps[i];</p>
+<p>​                   for(var key in p){</p>
+<p>​                            alert(key+”:”+p[key]);</p>
+<p>​                   }</p>
+<p>​              }</p>
+<p>​    3. JSON数据和Java对象的相互转换</p>
+<p> JSON解析器：</p>
+<p>​         常见的解析器：Jsonlib，Gson，fastjson，jackson</p>
+<p>​         1. JSON转为Java对象</p>
+<p>​            1. 导入jackson的相关jar包</p>
+<p>​            2. 创建Jackson核心对象 ObjectMapper</p>
+<p>​            3. 调用ObjectMapper的相关方法进行转换</p>
+<p>​                1. readValue(json字符串数据,Class)</p>
+<p>\2. Java对象转换JSON</p>
+<p>​            1. 使用步骤：</p>
+<p>​                1. 导入jackson的相关jar包</p>
+<p>​                2. 创建Jackson核心对象 ObjectMapper</p>
+<p>​                3. 调用ObjectMapper的相关方法进行转换</p>
+<p>​                  1. 转换方法：</p>
+<p>​                     writeValue(参数1，obj):</p>
+<p>​                       参数1：</p>
+<p>​                         File：将obj对象转换为JSON字符串，并保存到指定的文件中</p>
+<p>​                         Writer：将obj对象转换为JSON字符串，并将json数据填充</p>
+<p>到字符输出流中</p>
+<p>​                         OutputStream：将obj对象转换为JSON字符串，并将json数</p>
+<p>据填充到字节输出流中</p>
+<p>​                         writeValueAsString(obj):将对象转为json字符串</p>
+<p>​                    2. 注解：</p>
+<p>​                        1. @JsonIgnore：排除属性。</p>
+<p>​                        2. @JsonFormat：属性值得格式化</p>
+<p>​                           @JsonFormat(pattern = “yyyy-MM-dd”)</p>
+<p>\3. 复杂java对象转换</p>
+<p>​                        1. List：数组</p>
+<p>​                        2. Map：对象格式一致</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第六次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-网站开发第五次讲义" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第五次讲义/">网站开发第五次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第五次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:35:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>动态网站开发第五次课讲义</p>
+<p><strong>一、学习目标</strong></p>
+<p>\1. JSP进一步讲解:</p>
+<p>​    1. 指令</p>
+<p>​    2. 注释</p>
+<p>​    3. 内置对象</p>
+<p>\2. MVC开发模式</p>
+<p>\3. EL表达式</p>
+<p>\4. JSTL标签</p>
+<p>\5. 三层架构</p>
+<p><strong>二、具体讲解</strong></p>
+<p><strong>2.1、JSP进一步讲解</strong></p>
+<p> <strong>1. 指令</strong></p>
+<p>​        作用：用于配置JSP页面，导入资源文件</p>
+<p>​        格式：</p>
+<p>​            &lt;%@ 指令名称 属性名1=属性值1 属性名2=属性值2 … %&gt;</p>
+<p>​        分类：</p>
+<p>​            1. page： 配置JSP页面的</p>
+<p>​                contentType：等同于response.setContentType()</p>
+<p>​                    1. 设置响应体的mime类型以及字符集</p>
+<p>​                    2. 设置当前jsp页面的编码（只能是高级的IDE才能生效，如果使</p>
+<p>用低级工具，则需要设置pageEncoding属性设置当前页面的字符集）</p>
+<p>​                import：导包 &lt;%@ page &gt;</p>
+<p>​                errorPage：当前页面发生异常后，会自动跳转到指定的错误页面</p>
+<p>​                isErrorPage：标识当前也是是否是错误页面。</p>
+<p>​                    true：是，可以使用内置对象exception</p>
+<p>​                    false：否。默认值。不可以使用内置对象exception</p>
+<p>​            2. include    ： 页面包含的。导入页面的资源文件</p>
+<p>​                &lt;%@include file=”top.jsp”%&gt;</p>
+<p>​            3. taglib    ： 导入资源</p>
+<p>​                &lt;%@ taglib prefix=”c” uri=”<a href="http://java.sun.com/jsp/jstl/core&quot;" target="_blank" rel="noopener">http://java.sun.com/jsp/jstl/core&quot;</a> %&gt;</p>
+<p>​                 prefix：前缀，自定义的</p>
+<p><strong>2. 注释:</strong></p>
+<p>​    1. html注释：</p>
+<p>​        <!-- -->:只能注释html代码片段</p>
+<p>​    2. jsp注释：推荐使用</p>
+<p>​        &lt;%– –%&gt;：可以注释所有</p>
+<p><strong>3. 内置对象</strong></p>
+<p>​    在jsp页面中不需要创建，直接使用的对象</p>
+<p>​    一共有9个：</p>
+<p>​        变量名                    真实类型                作用</p>
+<p>​        pageContext                PageContext            当前页面共享数据，还  </p>
+<p>​                        可以获取其他八个内置对象</p>
+<p>​        </p>
+<p>request            HttpServletRequest         一次请求访问的多个资源(转发)</p>
+<p>​          session                    HttpSession             一次会话的多个请求间</p>
+<p>​          application                ServletContext             所有用户间共享数据</p>
+<p>​          response                HttpServletResponse     响应对象</p>
+<p>​           page                      Object                 当前页面(Servlet)的对象this</p>
+<p>​            out                     JspWriter             输出对象，数据输出到页面上</p>
+<p>​           config                    ServletConfig                Servlet的配置对象</p>
+<p>​         exception                 Throwable                异常对象</p>
+<p><strong>2.2、 MVC：开发模式</strong>    </p>
+<ol>
+<li>jsp演变历史</li>
+</ol>
+<p>​        1. 早期只有servlet，只能使用response输出标签数据，非常麻烦</p>
+<p>​        2. 后来又jsp，简化了Servlet的开发，如果过度使用jsp，在jsp中即写大量的</p>
+<p>java代码，有写html表，造成难于维护，难于分工协作</p>
+<p>​        3. 再后来，java的web开发，借鉴mvc开发模式，使得程序的设计更加合理性</p>
+<p>\2. MVC：</p>
+<p>​        1. M：Model，模型。JavaBean</p>
+<p>​            完成具体的业务操作，如：查询数据库，封装对象</p>
+<p>​        2. V：View，视图。JSP</p>
+<p>​            展示数据</p>
+<p>​        3. C：Controller，控制器。Servlet</p>
+<p>​            获取用户的输入</p>
+<p>​            调用模型</p>
+<p>​            将数据交给视图进行展示</p>
+<p>​        优缺点：</p>
+<p>​            1. 优点：</p>
+<p>​                1. 耦合性低，方便维护，可以利于分工协作</p>
+<p>​                2. 重用性高</p>
+<p>​            2. 缺点：</p>
+<p>​                1. 使得项目架构变得复杂，对开发人员要求高</p>
+<p><strong>2.3、EL表达式</strong></p>
+<p>  <strong>1. 概念</strong>：Expression Language 表达式语言</p>
+<p><strong>2. 作用：</strong>替换和简化jsp页面中java代码的编写</p>
+<p><strong>3. 语法：</strong>${表达式}</p>
+<p><strong>4. 注意：</strong></p>
+<p>​     jsp默认支持el表达式的。如果要忽略el表达式</p>
+<p>​     1. 设置jsp中page指令中：isELIgnored=”true” 忽略当前jsp页面中所有的el表达式</p>
+<p>​     2. ${表达式} ：忽略当前这个el表达式</p>
+<p><strong>5. 使用：</strong></p>
+<p>​        1. 运算：</p>
+<p>​            运算符：</p>
+<p>​                1. 算数运算符： + - * /(div) %(mod)</p>
+<p>​                2. 比较运算符： &gt; &lt; &gt;= &lt;= == !=</p>
+<p>​                3. 逻辑运算符： &amp;&amp;(and) ||(or) !(not)</p>
+<p>​                4. 空运算符： empty</p>
+<p>​                 功能：用于判断字符串、集合、数组对象是否为null或者长度是否为0</p>
+<p>​                    ${empty list}:判断字符串、集合、数组对象是否为null或者长度为0</p>
+<p>​                    ${not empty str}:表示判断字符串、集合、数组对象是否不为null </p>
+<p>并且 长度&gt;0</p>
+<p>​         2. 获取值</p>
+<p>​            1. el表达式只能从域对象中获取值</p>
+<p>​            2. 语法：</p>
+<p>​                1. ${域名称.键名}：从指定域中获取指定键的值</p>
+<p>​                    域名称：</p>
+<p>​                        1. pageScope        –&gt; pageContext</p>
+<p>​                        2. requestScope     –&gt; request</p>
+<p>​                        3. sessionScope     –&gt; session</p>
+<p>​                        4. applicationScope –&gt; application（ServletContext）</p>
+<p>​                    举例：在request域中存储了name=张三</p>
+<p>​                    获取：${requestScope.name}</p>
+<ol start="2">
+<li>${键名}：表示依次从最小的域中查找是否有该键对应的值，直到找</li>
+</ol>
+<p>到为止。</p>
+<p>​                3. 获取对象、List集合、Map集合的值</p>
+<p>​                    1. 对象：${域名称.键名.属性名}</p>
+<p>​                        本质上会去调用对象的getter方法</p>
+<p>​                    2. List集合：${域名称.键名[索引]}</p>
+<p>​                    3. Map集合：</p>
+<p>​                        ${域名称.键名.key名称}</p>
+<p>​                        ${域名称.键名[“key名称”]}</p>
+<p>​         3. 隐式对象：</p>
+<p>​             el表达式中有11个隐式对象</p>
+<p>​             pageContext：</p>
+<p>​                 获取jsp其他八个内置对象</p>
+<p>​                     ${pageContext.request.contextPath}：动态获取虚拟目录</p>
+<p><strong>2.4、JSTL表达式</strong></p>
+<p>  <strong>1. 概念</strong>：JavaServer Pages Tag Library  JSP标准标签库</p>
+<p>​        是由Apache组织提供的开源的免费的jsp标签&lt;标签&gt;</p>
+<p><strong>2. 作用：</strong>用于简化和替换jsp页面上的java代码        </p>
+<p><strong>3. 使用步骤：</strong></p>
+<p>​        1. 导入jstl相关jar包</p>
+<p>​        2. 引入标签库：taglib指令：  &lt;%@ taglib %&gt;</p>
+<p>​        3. 使用标签</p>
+<p><strong>4. 常用的JSTL标签</strong></p>
+<p>​        1. if:相当于java代码的if语句</p>
+<p>​            1. 属性：</p>
+<p>​               test 必须属性，接受boolean表达式</p>
+<p>​                   如果表达式为true，则显示if标签体内容，如果为false，则不显示</p>
+<p>标签体内容</p>
+<p>​                    一般情况下，test属性值会结合el表达式一起使用</p>
+<p>​                2. 注意：</p>
+<p>​                    c:if标签没有else情况，想要else情况，则可以在定义一个c:if标签</p>
+<p>​        2. choose:相当于java代码的switch语句</p>
+<p>​            1. 使用choose标签声明                     相当于switch声明</p>
+<p>​            2. 使用when标签做判断                     相当于case</p>
+<p>​            3. 使用otherwise标签做其他情况的声明        相当于default</p>
+<p>​        3. foreach:相当于java代码的for语句</p>
+<p><strong>5. 练习：</strong></p>
+<p>​        需求：在request域中有一个存有User对象的List集合。需要使用jstl+el将list</p>
+<p>集合数据展示到jsp页面的表格table中</p>
+<p><strong>2.5、 案例：用户信息列表展示</strong></p>
+<p>​    1. 需求：用户信息的增删改查操作</p>
+<p>​    2. 设计：</p>
+<p>​        1. 技术选型：Servlet+JSP+MySQL+JDBCTempleat+Duird+BeanUtilS+tomcat</p>
+<p>​        2. 数据库设计：</p>
+<p>​            create database day17; – 创建数据库</p>
+<p>​            use day17;                – 使用数据库</p>
+<p>​            create table user(   – 创建表</p>
+<p>​                id int primary key auto_increment,</p>
+<p>​                name varchar(20) not null,</p>
+<p>​                gender varchar(5),</p>
+<p>​                age int,</p>
+<p>​                address varchar(32),</p>
+<p>​                qq    varchar(20),</p>
+<p>​                email varchar(50)</p>
+<p>​            );</p>
+<p>​    3. 开发：</p>
+<p>​        1. 环境搭建</p>
+<p>​            1. 创建数据库环境</p>
+<p>​            2. 创建项目，导入需要的jar包</p>
+<p>​        2. 编码</p>
+<p>​    4. 测试</p>
+<p>​    5. 部署运维</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第五次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-网站开发第四次讲义" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第四次讲义/">网站开发第四次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第四次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:34:58.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>动态网站开发第四次课讲义</strong></p>
+<p><strong>一、学习目标</strong></p>
+<p>​    <strong>1. 会话技术</strong></p>
+<p>​        <strong>1. Cookie</strong></p>
+<p>​        <strong>2. Session</strong></p>
+<p><strong>二、具体讲解</strong></p>
+<p><strong>2.1、会话技术</strong></p>
+<ol>
+<li>会话：一次会话中包含多次请求和响应。</li>
+</ol>
+<p>​    一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方</p>
+<p>断开为止</p>
+<p>\2. 功能：在一次会话的范围内的多次请求间，共享数据</p>
+<p>\3. 方式：</p>
+<p>​      1. 客户端会话技术：Cookie</p>
+<p>​      2. 服务器端会话技术：Session</p>
+<p><strong>2.2、Cookie</strong></p>
+<p>  <strong>1. 概念：客户端会话技术，将数据保存到客户端</strong></p>
+<p><strong>2. 快速入门：</strong></p>
+<p>​      使用步骤：</p>
+<p>​        1. 创建Cookie对象，绑定数据</p>
+<p>​            new Cookie(String name, String value) </p>
+<p>​        2. 发送Cookie对象</p>
+<p>​            response.addCookie(Cookie cookie) </p>
+<p>​        3. 获取Cookie，拿到数据</p>
+<p>​            Cookie[]  request.getCookies()  </p>
+<p><strong>3. 实现原理</strong></p>
+<p>​        基于响应头set-cookie和请求头cookie实现</p>
+<p><strong>4. cookie的细节</strong></p>
+<p>​        <strong>1. 一次可不可以发送多个cookie?</strong></p>
+<p>​            可以</p>
+<p>​            可以创建多个Cookie对象，使用response调用多次addCookie方法发送</p>
+<p>cookie即可。</p>
+<p>​        <strong>2. cookie在浏览器中保存多长时间？</strong></p>
+<p>​            1. 默认情况下，当浏览器关闭后，Cookie数据被销毁</p>
+<p>​            2. 持久化存储：</p>
+<p>​                setMaxAge(int seconds)</p>
+<ol>
+<li>正数：将Cookie数据写到硬盘的文件中。持久化存储。并指</li>
+</ol>
+<p>定cookie存活时间，时间到后，cookie文件自动失效</p>
+<p>​                    2. 负数：默认值</p>
+<p>​                    3. 零：删除cookie信息</p>
+<p>​        <strong>3. cookie能不能存中文？</strong></p>
+<p>​               在tomcat 8 之前 cookie中不能直接存储中文数据。</p>
+<p>​               需要将中文数据转码—一般采用URL编码(%E3)</p>
+<p>​               在tomcat 8 之后，cookie支持中文数据。特殊字符还是不</p>
+<p>支持，建议使</p>
+<p>用URL编码存储，URL解码解析</p>
+<p>​        <strong>4. cookie共享问题？</strong></p>
+<p>​            1. 假设在一个tomcat服务器中，部署了多个web项目，那么在这些web</p>
+<p>项目中cookie能不能共享？</p>
+<p>​                 *默认情况下cookie不能共享</p>
+<p>​                 *setPath(String path):设置cookie的获取范围。默认情况下，设置当前的</p>
+<p>虚拟目录</p>
+<p>​                 * 如果要共享，则可以将path设置为”/“</p>
+<p>​             2. 不同的tomcat服务器间cookie共享问题？</p>
+<p>​                 * setDomain(String path):如果设置一级域名相同，那么多个服务器之</p>
+<p>间cookie可以共享</p>
+<p>​                 * setDomain(“.baidu.com”),那么tieba.baidu.com和news.baidu.com</p>
+<p>中cookie可以共享</p>
+<p>​        <strong>5. Cookie的特点和作用</strong></p>
+<p>​           <strong>特点：</strong></p>
+<p>​               1. cookie存储数据在客户端浏览器</p>
+<p>​               2. 浏览器对于单个cookie 的大小有限制(4kb) 以及 </p>
+<p>对同一个域名下的总cookie数量也有限制(20个)</p>
+<p>​            作用：</p>
+<p>​               1. cookie一般用于存出少量的不太敏感的数据</p>
+<p>​               2. 在不登录的情况下，完成服务器对客户端的</p>
+<p>身份识别</p>
+<p>​        <strong>6. 案例：记住上一次访问时间</strong></p>
+<p>​            1. 需求：</p>
+<p>​               1. 访问一个Servlet，如果是第一次访问，则提示：您好，欢迎您首次访问。</p>
+<p>​               2. 如果不是第一次访问，则提示：欢迎回来，您上次访问时间为:显示时</p>
+<p>间字符串</p>
+<p>​            2. 分析：</p>
+<p>​               1. 可以采用Cookie来完成</p>
+<p>​               2. 在服务器中的Servlet判断是否有一个名为lastTime的cookie</p>
+<p>​                  1. 有：不是第一次访问</p>
+<p>​                    1. 响应数据：欢迎回来，您上次访问时间为:2018年6月10日11:50:20</p>
+<p>​                    2. 写回Cookie：lastTime=2018年6月10日11:50:01</p>
+<p>​                  2. 没有：是第一次访问</p>
+<p>​                    1. 响应数据：您好，欢迎您首次访问</p>
+<p>​                    2. 写回Cookie：lastTime=2018年6月10日11:50:01</p>
+<p>​              3. 代码实现：</p>
+<p><strong>2.2、session</strong></p>
+<p>​    <strong>1. 概念：</strong>服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服</p>
+<p>务器端的对象中。HttpSession</p>
+<p>​    <strong>2. 快速入门：</strong></p>
+<p>​        1. 获取HttpSession对象：</p>
+<p>​            HttpSession session = request.getSession();</p>
+<p>​        2. 使用HttpSession对象：</p>
+<p>​            Object getAttribute(String name)  </p>
+<p>​            void setAttribute(String name, Object value)</p>
+<p>​            void removeAttribute(String name)  </p>
+<p>​    <strong>3. 原理:</strong></p>
+<p>​            Session的实现是依赖于Cookie的。</p>
+<p>​    <strong>4. 细节：</strong></p>
+<p>​     <strong>1. 当客户端关闭后，服务器不关闭，两次获取session是否为同一个？</strong></p>
+<p>​            * 默认情况下。不是。</p>
+<p>​            * 如果需要相同，则可以创建Cookie,键为JSESSIONID，设置最大存活时</p>
+<p>间，让cookie持久化保存。</p>
+<p>​              Cookie c = new Cookie(“JSESSIONID”,session.getId());</p>
+<p>​              c.setMaxAge(60*60);</p>
+<p>​              response.addCookie(c);</p>
+<p>​      <strong>2. 客户端不关闭，服务器关闭后，两次获取的session是同一个吗？</strong></p>
+<p>​            * 不是同一个，但是要确保数据不丢失。tomcat自动完成以下工作</p>
+<p>​                * session的钝化：</p>
+<p>​                    * 在服务器正常关闭之前，将session对象系列化到硬盘上</p>
+<p>​                * session的活化：</p>
+<p>​                    * 在服务器启动后，将session文件转化为内存中的session对象即可。</p>
+<p>​      <strong>3. session什么时候被销毁？</strong></p>
+<p>​            1. 服务器关闭</p>
+<p>​            2. session对象调用invalidate() 。</p>
+<p>​            3. session默认失效时间 30分钟</p>
+<p>​                选择性配置修改    </p>
+<p>​                <session-config></session-config></p>
+<p>​                    <session-timeout>30</session-timeout></p>
+<p>​                </p>
+<p>​      <strong>4. session的特点</strong></p>
+<p>​         1. session用于存储一次会话的多次请求的数据，存在服务器端</p>
+<p>​         2. session可以存储任意类型，任意大小的数据</p>
+<p>​          session与Cookie的区别：</p>
+<p>​            1. session存储数据在服务器端，Cookie在客户端</p>
+<p>​            2. session没有数据大小限制，Cookie有</p>
+<p>​            3. session数据安全，Cookie相对于不安全</p>
+<p><strong>## 案例：验证码</strong></p>
+<p>​    1. 案例需求：</p>
+<p>​        1. 访问带有验证码的登录页面login.jsp</p>
+<p>​        2. 用户输入用户名，密码以及验证码。</p>
+<p>​            * 如果用户名和密码输入有误，跳转登录页面，提示:用户名或密码错误</p>
+<p>​            * 如果验证码输入有误，跳转登录页面，提示：验证码错误</p>
+<p>​            * 如果全部输入正确，则跳转到主页success.jsp，显示：用户名,欢迎您</p>
+<p>​    2. 分析：</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第四次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="w-网站开发第三次讲义" class="article article-type-w  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第三次讲义/">网站开发第三次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第三次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:34:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>动态网站开发第三次课讲义</strong></p>
+<p><strong>一、学习目标</strong></p>
+<p>1、掌握http协议之响应部分</p>
+<p>2、熟练掌握Response的相关 API （重定向，路径，输出流）</p>
+<p>3、掌握ServletContext的常用API</p>
+<p>4、完成文件下载案例</p>
+<p><strong>二、具体讲解</strong></p>
+<p>   <strong>2.1、掌握http协议之响应部分</strong></p>
+<ol>
+<li>请求消息：客户端发送给服务器端的数据</li>
+</ol>
+<p>​       数据格式：</p>
+<p>​            1. 请求行</p>
+<p>​            2. 请求头</p>
+<p>​            3. 请求空行</p>
+<p>​            4. 请求体</p>
+<p>​    2. 响应消息：服务器端发送给客户端的数据</p>
+<p>​        数据格式：</p>
+<p>​            <strong>1. 响应行</strong></p>
+<p>​                1. 组成：协议/版本 响应状态码 状态码描述</p>
+<p>​                2. 响应状态码：服务器告诉客户端浏览器本次请求和响应的一个状态。</p>
+<p>​                    1. 状态码都是3位数字 </p>
+<p>​                    2. 分类：</p>
+<p>\1. 1xx：服务器就收客户端消息，但没有接受完成，等待一段时       间后，发送1xx多状态码</p>
+<p>​                        2. 2xx：成功。代表：200</p>
+<p>​                        3. 3xx：重定向。代表：302(重定向)，304(访问缓存)</p>
+<p>​                        4. 4xx：客户端错误。</p>
+<p>​                            代表：</p>
+<p>​                                404（请求路径没有对应的资源） </p>
+<p>​                                405：请求方式没有对应的doXxx方法</p>
+<p>​                        5. 5xx：服务器端错误。代表：500(服务器内部出现异常)        </p>
+<p>​            <strong>2. 响应头：</strong></p>
+<p>​                1. 格式：头名称： 值</p>
+<p>​                2. 常见的响应头：</p>
+<p>​                 1. Content-Type：服务器告诉客户端本次响应体数据格式以及编码格式</p>
+<p>​                 2. Content-disposition：服务器告诉客户端以什么格式打开响应体数据</p>
+<p>​                 MIME类型</p>
+<p>​                    值：</p>
+<p>​                        in-line:默认值,在当前页面内打开</p>
+<p>​                        attachment;filename=xxx：以附件形式打开响应体。文件下载</p>
+<p>​            <strong>3. 响应空行</strong></p>
+<p>​            <strong>4. 响应体:传输的数据</strong></p>
+<p>​        响应字符串格式</p>
+<p>​            HTTP/1.1 200 OK</p>
+<p>​            Content-Type: text/html;charset=UTF-8</p>
+<p>​            Content-Length: 101</p>
+<p>​            Date: Wed, 06 Jun 2018 07:08:42 GMT</p>
+<p>​            <html></html></p>
+<p>​              <head></head></p>
+<p>​                <title>$Title$</title></p>
+<p>​              </p>
+<p>​              <body></body></p>
+<p>​              hello , response</p>
+<p>​              </p>
+<p>​            </p>
+<p><strong>2.2、熟练掌握Response的相关 API （重定向，路径，输出流）</strong></p>
+<p>​    <strong>Response对象</strong></p>
+<p>​       功能：设置响应消息</p>
+<p>​        1. 设置响应行</p>
+<p>​            1. 格式：HTTP/1.1 200 ok</p>
+<p>​            2. 设置状态码：setStatus(int sc) </p>
+<p>​        2. 设置响应头：setHeader(String name, String value)     </p>
+<p>​        3. 设置响应体：</p>
+<p>​            使用步骤：</p>
+<p>​                1. 获取输出流</p>
+<p>​                    字符输出流：PrintWriter getWriter()</p>
+<p>​                    字节输出流：ServletOutputStream getOutputStream()</p>
+<p>​                2. 使用输出流，将数据输出到客户端浏览器</p>
+<p>​    <strong>案例：</strong></p>
+<p>​        1. 完成重定向</p>
+<p>​            重定向：资源跳转的方式，重定向为向另外一个servlet</p>
+<p>​                    或另外一个jsp发送一个新的请求</p>
+<p>​            代码实现：</p>
+<p>​              1. 设置状态码为302</p>
+<p>​                response.setStatus(302);</p>
+<p>​              2.设置响应头location</p>
+<p>​                response.setHeader(“location”,”/day15/responseDemo2”);</p>
+<p>​                //简单的重定向方法</p>
+<p>​                response.sendRedirect(“/day15/responseDemo2”);</p>
+<p>​             重定向的特点:redirect</p>
+<p>​                1. 地址栏发生变化</p>
+<p>​                2. 重定向可以访问其他站点(服务器)的资源</p>
+<p>​                3. 重定向是两次请求。不能使用request对象来共享数据</p>
+<p>​             转发的特点：forward</p>
+<p>​                1. 转发地址栏路径不变</p>
+<p>​                2. 转发只能访问当前服务器下的资源</p>
+<p>​                3. 转发是一次请求，可以使用request对象来共享数据</p>
+<p>​             forward 和  redirect 区别</p>
+<p>​              路径写法：</p>
+<p>​                1. 路径分类</p>
+<p>​                    1. 相对路径：通过相对路径不可以确定唯一资源</p>
+<p>​                        如：./index.html</p>
+<p>​                          不以/开头，以.开头路径</p>
+<p>​                          规则：找到当前资源和目标资源之间的相对位置关系</p>
+<p>​                            ./：当前目录</p>
+<p>​                            ../:后退一级目录</p>
+<p>​                    2. 绝对路径：通过绝对路径可以确定唯一资源</p>
+<p>​    如：<a href="http://localhost/day15/responseDemo2" target="_blank" rel="noopener">http://localhost/day15/responseDemo2</a>             /day15/responseDemo2     以/开头的路径</p>
+<p><strong>规则：判断定义的路径是给谁用的？判断请求将来从哪儿发出</strong></p>
+<p>​                         给客户端浏览器使用：需要加虚拟目录(项目的访问路径)</p>
+<p>​                                建议虚拟目录动态获取：request.getContextPath()</p>
+<p>​                                <a> , <form> 重定向…</form></a></p>
+<p>​                         给服务器使用：不需要加虚拟目录</p>
+<p>​                                转发路径</p>
+<p>​        2. 服务器输出字符数据到浏览器</p>
+<p>​             步骤：</p>
+<p>​                1. 获取字符输出流</p>
+<p>​                2. 输出数据</p>
+<p>​             注意：</p>
+<p>​                乱码问题：</p>
+<p>​                  1. PrintWriter pw = response.getWriter();获取的流的默认编码是ISO-8859-1</p>
+<p>​              2. 设置该流的默认编码</p>
+<p>​              //简单的形式，设置编码，是在获取流之前设置</p>
+<p>​                 response.setContentType(“text/html;charset=utf-8”);</p>
+<p>​        3. 服务器输出字节数据到浏览器</p>
+<p>​            步骤：</p>
+<p>​                1. 获取字节输出流</p>
+<p>​                2. 输出数据</p>
+<p>​        4. 验证码</p>
+<p>​            1. 本质：图片</p>
+<p>​            2. 目的：防止恶意表单注册</p>
+<p>​           <img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml18716%5Cwps1.jpg" alt="img"></p>
+<p><strong>2.3、掌握ServletContext的常用API</strong></p>
+<p><strong>Servlet有四大域对象，pageContext request session application</strong></p>
+<p><strong>request       HttpServletRequest</strong></p>
+<p><strong>session       HttpSession</strong></p>
+<p><strong>application    ServletContext</strong></p>
+<p>\1. 概念：代表整个web应用，可以和程序的容器(服务器)来通信</p>
+<p>​    2. 获取：</p>
+<p>​        1. 通过request对象获取</p>
+<p>​            request.getServletContext();</p>
+<p>​        2. 通过HttpServlet获取</p>
+<p>​            this.getServletContext();</p>
+<p>​    3. 功能：</p>
+<p>​        1. 获取MIME类型：</p>
+<p>​            * MIME类型:在互联网通信过程中定义的一种文件数据类型</p>
+<p>​                * 格式： 大类型/小类型   text/html        image/jpeg</p>
+<p>​            * 获取：String getMimeType(String file)  </p>
+<p>​        2. 域对象：共享数据</p>
+<p>​            1. setAttribute(String name,Object value)</p>
+<p>​            2. getAttribute(String name)</p>
+<p>​            3. removeAttribute(String name)</p>
+<p>​            * ServletContext对象范围：所有用户所有请求的数据</p>
+<p>​        3. 获取文件的真实(服务器)路径</p>
+<p>​            1. 方法：String getRealPath(String path)  </p>
+<p>​              String b = context.getRealPath(“/b.txt”);//web目录下资源访问</p>
+<p>​              System.out.println(b);</p>
+<p>​              String c = context.getRealPath(“/WEB-INF/c.txt”);//WEB-INF目录下的资源访问</p>
+<p>​              System.out.println(c);</p>
+<p>​            String a = context.getRealPath(“/WEB-INF/classes/a.txt”);//src目录下的资源访问</p>
+<p>​              System.out.println(a);</p>
+<p><strong>2.4、完成文件下载案例</strong></p>
+<p>​      文件下载需求：</p>
+<p>​        1. 页面显示超链接</p>
+<p>​        2. 点击超链接后弹出下载提示框</p>
+<p>​        3. 完成图片文件下载</p>
+<p>​      分析：</p>
+<p>​        1. 超链接指向的资源如果能够被浏览器解析，则在浏览器中展示，如果不能解析，则弹出下载提示框。不满足需求</p>
+<p>​        2. 任何资源都必须弹出下载提示框</p>
+<p>​        3. 使用响应头设置资源的打开方式：</p>
+<p>​         content-disposition:attachment;filename=xxx</p>
+<p>​      步骤：</p>
+<p>​        1. 定义页面，编辑超链接href属性，指向Servlet，传递资源名称filename</p>
+<p>​        2. 定义Servlet</p>
+<p>​            1. 获取文件名称</p>
+<p>​            2. 使用字节输入流加载文件进内存</p>
+<p>​            3. 指定response的响应头： content-disposition:attachment;filename=xxx</p>
+<p>​            4. 将数据写出到response输出流</p>
+<p>​      问题：</p>
+<p>​          中文文件问题</p>
+<p>​             解决思路：</p>
+<p>​                1. 获取客户端使用的浏览器版本信息</p>
+<p>​                2. 根据不同的版本信息，设置filename的编码方式不同</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第三次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-网站开发第二次讲义" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第二次讲义/">网站开发第二次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第二次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:32:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>动态网站开发第二次课讲义</p>
+<p><strong>一、学习目标</strong></p>
+<p>1、了解tomcat目录结构</p>
+<p>2、了解java web项目目录结构</p>
+<p>3、掌握jsp概念</p>
+<p>4、了解Servlet概念，创建servlet</p>
+<p>5、掌握Servlet的执行原理和生命周期</p>
+<p>6、servlet系统结构</p>
+<p>7、理解HTTP协议及HTTP请求的结构（请求行，头，体）</p>
+<p>8、熟练掌握使用HttpServeltRequest获取常用的头信息，请求参数，请求参数乱码处理，转发的特点</p>
+<p>9、熟练掌握登陆案例</p>
+<p><strong>二、具体讲解</strong></p>
+<p><strong>2.1、tomcat目录结构详解</strong></p>
+<p>打开tomcat的解压之后的目录可以看到如下的目录结构：</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps8.jpg" alt="img"> </p>
+<p><strong>1**</strong>、bin：**</p>
+<p>bin目录主要是用来存放tomcat的命令，主要有两大类，一类是以.sh结尾的（linux命令），另一类是以.bat结尾的（windows命令）。可以把命令配置在环境变量里边</p>
+<p>startup 用来启动tomcat </p>
+<p>shutdown 用来关闭tomcat </p>
+<p>修改catalina可以设置tomcat的内存</p>
+<p><strong>2**</strong>、<strong>**webapps：</strong></p>
+<p>webapps目录用来存放应用程序，当tomcat启动时会去加载webapps目录下的应用程序。可以以文件夹、war包、jar包的形式发布应用。<br>当然，你也可以把应用程序放置在磁盘的任意位置，在配置文件中映射好就行。 </p>
+<p><strong>3**</strong>、<strong>**conf</strong></p>
+<p>conf目录主要是用来存放tomcat的一些配置文件。</p>
+<p>server.xml可以设置端口号、设置域名或IP、默认加载的项目、请求编码 </p>
+<p>web.xml可以设置tomcat支持的文件类型 </p>
+<p>context.xml可以用来配置数据源之类的 </p>
+<p>tomcat-users.xml用来配置管理tomcat的用户与权限</p>
+<p><strong>4**</strong>、<strong>**lib:</strong></p>
+<p>lib目录主要用来存放tomcat运行需要加载的jar包。<br>例如，像连接数据库的jdbc的包我们可以加入到lib目录中来。</p>
+<p><strong>5、**</strong>logs：**</p>
+<p>logs目录用来存放tomcat在运行过程中产生的日志文件，非常重要的是在控制台输出的日志。（清空不会对tomcat运行带来影响） </p>
+<p>在windows环境中，控制台的输出日志在catalina.xxxx-xx-xx.log文件中 </p>
+<p>在linux环境中，控制台的输出日志在catalina.out文件中</p>
+<p><strong>6、**</strong>temp：**</p>
+<p>temp目录用户存放tomcat在运行过程中产生的临时文件。（清空不会对tomcat运行带来影响</p>
+<p><strong>7、**</strong>work:**</p>
+<h2 id="work目录用来存放tomcat在运行时的编译后文件，例如JSP编译后的文件。-清空work目录，然后重启tomcat，可以达到清除缓存的作用。"><a href="#work目录用来存放tomcat在运行时的编译后文件，例如JSP编译后的文件。-清空work目录，然后重启tomcat，可以达到清除缓存的作用。" class="headerlink" title="work目录用来存放tomcat在运行时的编译后文件，例如JSP编译后的文件。  清空work目录，然后重启tomcat，可以达到清除缓存的作用。"></a>work目录用来存放tomcat在运行时的编译后文件，例如JSP编译后的文件。  清空work目录，然后重启tomcat，可以达到清除缓存的作用。</h2><p><strong>2.2、了解java web项目目录结构</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps9.jpg" alt="img"> </p>
+<p><strong>web.xml配置文件</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps10.jpg" alt="img"> </p>
+<p>项目启动时会加载web.xml配置文件</p>
+<p>Web.xml文件的作用如下</p>
+<p><strong>1、指定欢迎页面</strong>，例如：</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps11.jpg" alt="img"><br>上面的例子指定了几个欢迎页面，显示时按顺序从第一个找起，如果第一个存在，就显示第一个，后面的不起作用。如果第一个不存在，就找第二个，以此类推。</p>
+<p><strong>2、**</strong>配置servlet、filter、**</p>
+<p>我们以后创建的servlet与filter需要在web.xml中配置才会生效，至于怎么配置后边的课程讲</p>
+<p><strong>2.3、掌握jsp概念</strong></p>
+<p><strong>1、基本概念</strong></p>
+<p><strong>J**</strong>SP是运行在服务器端的程序，<strong>**负责java web项目中的数据展示，以及前后数据的中转与交互</strong></p>
+<p><strong>JSP页面中，可以写html、css、js代码、java代码、el表达式、jstl标签</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps12.jpg" alt="img"> </p>
+<p>分别在jsp里边写对应的代码</p>
+<p><strong>2、jsp的执行流程</strong></p>
+<p><strong>翻译阶段</strong></p>
+<p>   当Web容器接收到JSP请求时，首先会对JSP文件进行翻译，将编写好的JSP文件通过JSP容器转换成可识别的Java源代码。</p>
+<p><strong>编译阶段</strong></p>
+<p>​    将Java源文件编译成可执行的字节码文件</p>
+<p><strong>执行阶段</strong></p>
+<p>   经过翻译和编译两个阶段，生成了可执行的二进制字节码文件，此时进入执行阶段。当执行结束后，得到处理请求的结果，把生成的结果页面返回到浏览器客户端显示。</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps13.jpg" alt="img"> </p>
+<p><strong>2.4、了解Servlet概念,创建servlet</strong></p>
+<p><strong>Servlet概念以及作用</strong></p>
+<p>Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。</p>
+<p>   用户在jsp页面上输入数据，可以提交给servlet做处理，java代码读到的数据，可以通过servlet交给jsp页面去展示。这在项目中就充当了，控制与中转的功能。</p>
+<p><strong>创建servlet</strong></p>
+<p>\1. 创建JavaEE项目</p>
+<p>\2. 定义一个类，实现Servlet接口</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps14.jpg" alt="img"> </p>
+<p>\3. 实现接口中的抽象方法</p>
+<p>\4. 配置Servlet</p>
+<p>在web.xml中配置：</p>
+<!--配置Servlet -->
+
+<servlet>
+
+<p><servlet-name>ServletDemo1</servlet-name></p>
+<p><servlet-class>com.dzqc.web.servlet.ServletDemo1</servlet-class></p>
+</servlet>
+
+<servlet-mapping>
+
+<p><servlet-name>ServletDemo1</servlet-name></p>
+<p><url-pattern>/demo1</url-pattern></p>
+</servlet-mapping>
+
+<p><strong>2.5、servlet执行原理</strong></p>
+<p>\1. 当服务器接受到客户端浏览器的请求后，会解析请求URL路径，获取访问的Servlet的资源路径</p>
+<p>\2. 查找web.xml文件，是否有对应的<url-pattern>标签体内容。</url-pattern></p>
+<p>\3. 如果有，则在找到对应的<servlet-class>全类名</servlet-class></p>
+<p>\4. tomcat会将字节码文件加载进内存，并且创建其对象</p>
+<p>\5. 调用其方法</p>
+<p><strong>2.6、servlet生命周期</strong></p>
+<p>\1. 被创建：执行init方法，只执行一次</p>
+<p>\2. 提供服务：执行service方法，执行多次，servelt核心方法</p>
+<p>\3. 被销毁：执行destroy方法，只执行一次</p>
+<p>演示案例如下</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps15.jpg" alt="img"> </p>
+<p><strong>2.7、servlet体系结构</strong></p>
+<p>Servlet有一个子类为GenericServlet，GenericServlet又有一个子类为HttpServlet，在创建servlet时，可以实现Servlet接口，也可以继承GenericServlet类。但在项目中创建Servlet的方式为，继承HttpServlet类。</p>
+<p><strong>创建的方式如下：</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps16.jpg" alt="img"> </p>
+<p><strong>2.7、理解HTTP协议及HTTP请求的结构（请求行，头，体）</strong></p>
+<p>我们已经掌握了如何创建Servlet,但Servlet的真正作用为处理用于的请求，以及对用户的请求做响应，那么我们就要知道会发送哪几种请求，要想理解请求，就要先知道Http协议与Http请求结构</p>
+<p><strong>HTTP协议概念</strong></p>
+<p>Hyper Text Transfer Protocol 超文本传输协议，定义了，客户端和服务器端通信时，发送数据的格式</p>
+<p><strong>特点：</strong></p>
+<p>\1. 基于TCP/IP的高级协议</p>
+<p>\2. 默认端口号:80</p>
+<p>\3. 基于请求/响应模型的:一次请求对应一次响应</p>
+<p>\4. 无状态的：每次请求之间相互独立，不能交互数据</p>
+<p>历史版本：</p>
+<p>1.0：每一次请求响应都会建立新的连接</p>
+<p>1.1：复用连接</p>
+<p><strong>HTTP协议的请求方法，请求头，请求体</strong></p>
+<p><strong>Http协议请求方法：</strong></p>
+<p>HTTP/1.1协议中共定义了八种方法（也叫“动作”）来以不同方式操作指定的资源。但最常用的两种请求方法为，get请求与post请求</p>
+<p><strong>get请求与post请求的区别：</strong></p>
+<p>get请求：不安全，会把运载的数据展示在url中，携带数据量比较小</p>
+<p>Post请求：安全，携带数据量比较大，比如上传文件，下载文件，肯定要用post请求</p>
+<p><strong>Http协议请求头：</strong></p>
+<p>请求头的主要作用为：客户端浏览器告诉服务器一些信息</p>
+<p>1、浏览器告诉服务器，我访问你使用的浏览器版本信息</p>
+<p>2、告诉服务器，我(当前请求)从哪里来？</p>
+<p><strong>Http协议请求体：</strong></p>
+<p>封装POST请求消息的请求参数的，换句话说请求体里放的是要提交给服务器的内容，例如账户名、密码。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第二次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-网站开发第一次讲义" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/02/网站开发第一次讲义/">网站开发第一次讲义</a>
+    </h1>
+  
+
+        
+        <a href="/2019/12/02/网站开发第一次讲义/" class="archive-article-date">
+  	<time datetime="2019-12-02T11:29:58.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>动态网站开发第一次课讲义</p>
+<p><strong>一、学习目标</strong></p>
+<ol>
+<li><p>理解WEB相关概念和WEB服务器概述</p>
+</li>
+<li><p>会安装、卸载、启动和关闭tomcat</p>
+</li>
+<li><p>掌握为eclipse配置tomcat</p>
+</li>
+<li><p>能够创建动态WEB项目</p>
+</li>
+<li><p>掌握使用tomcat部署项目</p>
+</li>
+</ol>
+<p><strong>二、具体讲解</strong></p>
+<p><strong>2.1、WEB相关概念</strong></p>
+<p>1、软件架构</p>
+<p>1) C/S：客户端/服务器端</p>
+<p>​        例如：360安全卫士、QQ等</p>
+<p>2) B/S：浏览器/服务器端</p>
+<p>​            例如：淘宝网、京东网、微博、bilibili等</p>
+<p>\2. 资源分类</p>
+<p>1) 静态资源：所有用户访问后，得到的结果都是一样的，称为静态资源.静态资源可以直接被浏览器解析如： html,css,JavaScript</p>
+<p>2) 动态资源:每个用户访问相同资源后，得到的结果可能不一样。称为动态资源。动态资源被访问后，需要先转换为静态资源，在返回给浏览器如：servlet/jsp,php,asp….</p>
+<p>\3. 网络通信三要素</p>
+<p>1) IP：电子设备(计算机)在网络中的唯一标识。</p>
+<p>2) 端口：应用程序在计算机中的唯一标识。 0~65536</p>
+<p>3) 传输协议：规定了数据传输的规则</p>
+<p>\4. 基础协议：</p>
+<p>1) tcp:安全协议，三次握手、四次挥手。 速度稍慢</p>
+<p>2) udp：不安全协议。 速度快</p>
+<p><strong>2.2、WEB服务器</strong></p>
+<p>1、服务器：安装了服务器软件的计算机</p>
+<p>2、服务器软件：接收用户的请求，处理请求，做出响应</p>
+<p>3、web服务器软件：接收用户的请求，处理请求，做出响应。</p>
+<p><strong>在web服务器软件中，可以部署web项目，让用户通过浏览器来访问这些项目</strong></p>
+<p><strong>web容器</strong></p>
+<p>4、常见的java相关的web服务器软件：</p>
+<p>Tomcat：Apache基金组织，中小型的JavaEE服务器，仅仅支持少量的JavaEE规范</p>
+<p>servlet/jsp。开源的，免费</p>
+<p>webLogic：oracle公司，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。</p>
+<p>webSphere：IBM公司，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。</p>
+<p>JBOSS：JBOSS公司的，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。</p>
+<p><strong>2.3、Tomcat服务器下载、安装、启动、关闭</strong></p>
+<p>\1. 下载：<a href="http://tomcat.apache.org/" target="_blank" rel="noopener">http://tomcat.apache.org/</a> </p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps1.jpg" alt="img"> </p>
+<p>\2. 安装：解压压缩包即可。</p>
+<p><strong>注意：安装目录建议不要有中文和空格</strong></p>
+<p>\3. 卸载：删除目录就行了</p>
+<p>\4. 启动：</p>
+<p>bin/startup.bat ,双击运行该文件即可</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps2.jpg" alt="img"> </p>
+<p>5、访问：浏览器输入：<a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a> 回车访问自己</p>
+<p><a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a> 访问别人</p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps3.jpg" alt="img"> </p>
+<p>6、tomcat的关闭</p>
+<p>\1. 正常关闭：</p>
+<p>* bin/shutdown.bat</p>
+<p>* ctrl+c</p>
+<p>\2. 强制关闭：</p>
+<p>* 点击启动窗口的×</p>
+<p><strong>注意8.5启动过程中可能会遇到乱码问题，可以用以下方法解决</strong></p>
+<p>打开tomcat/conf/目录</p>
+<p>修改logging.properties</p>
+<p>找到</p>
+<p>java.util.logging.ConsoleHandler.encoding = utf-8这行</p>
+<p>更改为</p>
+<p>java.util.logging.ConsoleHandler.encoding = GBK</p>
+<p><strong>2.4、掌握为eclipse配置tomcat</strong></p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps4.jpg" alt="img"> </p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps5.jpg" alt="img"> </p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps6.jpg" alt="img"> </p>
+<p><img src="file:///C:%5CUsers%5CDELL%5CAppData%5CLocal%5CTemp%5Cksohtml11152%5Cwps7.jpg" alt="img"> </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/12/02/网站开发第一次讲义/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-MySQL第五课" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -304,6 +1703,81 @@
 
 
   
+    <article id="post-mysql第二节" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/10/21/mysql第二节/">MySQL第二课</a>
+    </h1>
+  
+
+        
+        <a href="/2019/10/21/mysql第二节/" class="archive-article-date">
+  	<time datetime="2019-10-21T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Mysql第二次课<br>   数据库设计的三大范式<br>   第一范式：<br>      每个字段的数据都是不可分割<br>      的最小的数据单元<br>   第二范式<br>      每张表只能描述一件事情<br>      每张表必须有主键<br>   第三范式<br>      非主键字段依赖于主键字段<br>      换句话说，非主键字段与<br>      主键字段要直接相关<br>  注意：设计表时，尽可能遵守规范<br>     但是，有时为了性能，会牺牲<br>     一点规范<br>  Mysql运算符<br>    算术运算符<br>       + - * /<br>    逻辑运算符<br>       and or !<br>    比较运算符<br>       &gt; &lt; &gt;= &lt;= &lt;&gt; !=<br> 聚合函数<br> count() 求行数<br> sum() 求一列的和<br> avg() 去平均值<br> max() 求最大值<br> min() 求最小值<br>Mysql常用关键字<br> in   查询在什么什么选项中的数据<br>      where name in(‘张三’,’李四’)<br>      把name等于张三，等于李四的都<br>      查询出来<br> not in<br>     where name not in(‘张三’,’李四’)<br>     把name不等于张三，不等于李四<br>     的都查询出来<br> distinct 去重<br> limit 查询出表的前几行<br> between…and..在什么什么之间<br> as<br>*/<br>SELECT * FROM goods;<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘吹风机’,89);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘外套’,200);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘外套’,220);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘吹风机’,78);</p>
+<p>#查询出商品价格大于10的商品<br>SELECT * FROM goods<br>       WHERE gprice&gt;10;<br>#查询商品价格不等于10的商品信息<br>SELECT * FROM goods<br>       WHERE gprice&lt;&gt;10;<br>#查询商品价格大于10并且小于50的<br>#商品信息<br>SELECT * FROM goods WHERE<br>       gprice&gt;10 AND gprice&lt;50;<br>#查询出商品的数量<br>#字段名 as 新字段名 给列名<br>#重命名成新的列名<br>SELECT COUNT(*) AS ‘总数量’<br>          FROM goods;<br>#查询商品的总价格<br>SELECT SUM(gprice) ‘总价格’<br>             FROM goods;<br>#查询商品的平均价格<br>SELECT AVG(gprice) ‘平均价格’<br>             FROM goods;<br>#查询商品的最高价格<br>SELECT MAX(gprice) ‘最高价格’<br>             FROM goods;<br>#查询商品的最低价格<br>SELECT MIN(gprice) ‘最低价格’<br>             FROM goods;<br>#查询出商品名称是小熊雨伞，外套的<br>#都查询出来<br>SELECT * FROM goods WHERE<br>      gnam IN(‘小熊雨伞’,’外套’);<br>SELECT * FROM goods WHERE<br>      gnam NOT IN(‘小熊雨伞’,’外套’);<br>#把商品名字重复的去掉<br>SELECT DISTINCT gnam FROM goods;<br>#查询出表的前两行<br>#limit 0,2:0是行的下标，2是行数<br>#表的行的下标是由0开始的<br>SELECT * FROM goods LIMIT 0,2;<br>#查询商品价格大于10并且小于50的<br>#商品信息<br>SELECT * FROM goods WHERE gprice<br>      BETWEEN 10 AND 50;</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/10/21/mysql第二节/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-MySQL第三节" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -383,156 +1857,10 @@
 
 
   
-    <article id="post-mysql第二节" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/21/mysql第二节/">MySQL第二课</a>
-    </h1>
-  
-
-        
-        <a href="/2019/10/21/mysql第二节/" class="archive-article-date">
-  	<time datetime="2019-10-21T11:57:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Mysql第二次课<br>   数据库设计的三大范式<br>   第一范式：<br>      每个字段的数据都是不可分割<br>      的最小的数据单元<br>   第二范式<br>      每张表只能描述一件事情<br>      每张表必须有主键<br>   第三范式<br>      非主键字段依赖于主键字段<br>      换句话说，非主键字段与<br>      主键字段要直接相关<br>  注意：设计表时，尽可能遵守规范<br>     但是，有时为了性能，会牺牲<br>     一点规范<br>  Mysql运算符<br>    算术运算符<br>       + - * /<br>    逻辑运算符<br>       and or !<br>    比较运算符<br>       &gt; &lt; &gt;= &lt;= &lt;&gt; !=<br> 聚合函数<br> count() 求行数<br> sum() 求一列的和<br> avg() 去平均值<br> max() 求最大值<br> min() 求最小值<br>Mysql常用关键字<br> in   查询在什么什么选项中的数据<br>      where name in(‘张三’,’李四’)<br>      把name等于张三，等于李四的都<br>      查询出来<br> not in<br>     where name not in(‘张三’,’李四’)<br>     把name不等于张三，不等于李四<br>     的都查询出来<br> distinct 去重<br> limit 查询出表的前几行<br> between…and..在什么什么之间<br> as<br>*/<br>SELECT * FROM goods;<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘吹风机’,89);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘外套’,200);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘外套’,220);<br>INSERT INTO goods(gnam,gprice)<br>           VALUES(‘吹风机’,78);</p>
-<p>#查询出商品价格大于10的商品<br>SELECT * FROM goods<br>       WHERE gprice&gt;10;<br>#查询商品价格不等于10的商品信息<br>SELECT * FROM goods<br>       WHERE gprice&lt;&gt;10;<br>#查询商品价格大于10并且小于50的<br>#商品信息<br>SELECT * FROM goods WHERE<br>       gprice&gt;10 AND gprice&lt;50;<br>#查询出商品的数量<br>#字段名 as 新字段名 给列名<br>#重命名成新的列名<br>SELECT COUNT(*) AS ‘总数量’<br>          FROM goods;<br>#查询商品的总价格<br>SELECT SUM(gprice) ‘总价格’<br>             FROM goods;<br>#查询商品的平均价格<br>SELECT AVG(gprice) ‘平均价格’<br>             FROM goods;<br>#查询商品的最高价格<br>SELECT MAX(gprice) ‘最高价格’<br>             FROM goods;<br>#查询商品的最低价格<br>SELECT MIN(gprice) ‘最低价格’<br>             FROM goods;<br>#查询出商品名称是小熊雨伞，外套的<br>#都查询出来<br>SELECT * FROM goods WHERE<br>      gnam IN(‘小熊雨伞’,’外套’);<br>SELECT * FROM goods WHERE<br>      gnam NOT IN(‘小熊雨伞’,’外套’);<br>#把商品名字重复的去掉<br>SELECT DISTINCT gnam FROM goods;<br>#查询出表的前两行<br>#limit 0,2:0是行的下标，2是行数<br>#表的行的下标是由0开始的<br>SELECT * FROM goods LIMIT 0,2;<br>#查询商品价格大于10并且小于50的<br>#商品信息<br>SELECT * FROM goods WHERE gprice<br>      BETWEEN 10 AND 50;</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Mysql</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/10/21/mysql第二节/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/16/hello-world/">Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2019/10/16/hello-world/" class="archive-article-date">
-  	<time datetime="2019-10-16T10:05:51.828Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-16</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/10/16/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    </nav>
   
 
 
